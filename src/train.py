@@ -50,7 +50,7 @@ def train(max_epoch,batch_size = 64):
     voc_size = data.get_voc_size()
     model = Model.Encoder(batch_size = batch_size,voc_size = voc_size, hidden_size = 100, device = device ,n_layers = 1,dropout = 0).to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(),lr = 0.0001)
+    optimizer = torch.optim.SGD(model.parameters(),lr = 0.03)
     epoch_count = 0
     increase_count = 0
     while True:
@@ -105,9 +105,9 @@ def sample(dataset,model,batch_size,criterion):
         y_pd += output.tolist()
 
     y_gt = torch.tensor(y_gt)
-    y_pd = torch.tensor(y_pd)
+    y_pd = torch.tensor(y_pd) 
     loss = criterion(y_pd,y_gt)
     return loss.item()
 
 if __name__ == "__main__":
-    train(max_epoch=1000,batch_size=16)
+    train(max_epoch=10000,batch_size=1024)

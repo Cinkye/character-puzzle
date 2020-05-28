@@ -13,7 +13,6 @@ class Data:
         self.n_for_1 = 2
         raw_riddles = read_data.read_dataset() #[[谜面，谜底，选项],]
         random.shuffle(raw_riddles)
-        print(raw_riddles[0:20])
         riddles = self.construct_classify_riddle_set(raw_riddles) #[[谜面，答案，地信],]
         one_tenth = len(riddles) // 10
         raw_one_tenth = len(raw_riddles) // 10
@@ -42,6 +41,9 @@ class Data:
         self.train = [indexizer(row) for row in train]
         self.valid = [indexizer(row,is_valid= True) for row in valid]
         self.test = [indexizer(row) for row in test]
+
+        # print(self.train, self.valid, self.test)
+        # exit()
         
     def construct_classify_riddle_set(self,riddles):
         #
@@ -50,12 +52,16 @@ class Data:
         #
         ret = list()
         for riddle in riddles:
-            for opt in riddle[2]:
-                #item = list()
-                #item.append(riddle[0]) #谜面
-                #item.append(opt) #答案
-                #item.append(opt == riddle[1]) #地信
-                ret.append([riddle[0],opt,int(opt == riddle[1])])
+            # for opt in riddle[2]:
+            #     #item = list()
+            #     #item.append(riddle[0]) #谜面
+            #     #item.append(opt) #答案
+            #     #item.append(opt == riddle[1]) #地信
+            #     ret.append([riddle[0],opt,int(opt == riddle[1])])
+            if random.random() < 0.5:
+                ret.append([riddle[0],riddle[1],1])
+            else:
+                ret.append([riddle[0],'1' if riddle[1] == '0' else '0', 0])
         return ret
 
     def get_voc_dict(self):

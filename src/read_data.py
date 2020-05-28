@@ -34,7 +34,7 @@ def construct_train_data_corpus_vocabulary_dictionary(begin,end):
 					ans_voc[word] = ans_cnt
 					ans_cnt += 1
 			line_cnt += 1
-	return riddle_voc,ans_voc
+	return riddle_voc, ans_voc
 
 def read_dataset():
 	dataset_file = "train_data.txt"
@@ -54,5 +54,6 @@ def read_dataset():
 		exit(0)
 	return ret
 
-ret = read_dataset()
-print(ret[0:10])
+if __name__ == "__main__":
+	ret = read_dataset()
+	# print(ret[0:10])

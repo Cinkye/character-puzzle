@@ -12,21 +12,23 @@ from tqdm import tqdm
 device = 'cuda'
 
 def train_iter(data,model,criterion,optimizer,batch_size,voc_size):
-    [dataset_X,dataset_opt,dataset_gt],datset_size = data.get_train_data()
+    [dataset_X,dataset_gt,dataset_opt],datset_size = data.get_train_data()
     loss = 0
     losses = list()
     for batch_iter_cnt in tqdm(range(0,datset_size - batch_size,batch_size),ascii = True):
         # get gd & opt
-        gt = dataset_gt[batch_iter_cnt : batch_iter_cnt + batch_size]
-        opt = dataset_opt[batch_iter_cnt : batch_iter_cnt + batch_size]
+        gt = dataset_gt[batch_iter_cnt : batch_iter_cnt + batch_size]   # groundtruth
+        opt = dataset_opt[batch_iter_cnt : batch_iter_cnt + batch_size] # option
         gt = torch.LongTensor(gt).to(device)
 
         # append opt to X
-        X = dataset_X[batch_iter_cnt : batch_iter_cnt + batch_size]
+        X = dataset_X[batch_iter_cnt : batch_iter_cnt + batch_size] 
         X = [X[index]+ [opt[index],] for index in range(batch_size)]
+        X.sort(key = lambda i:len(i),reverse=True)
 
         # padding X with `voc_size`
         lens = torch.tensor([len(X[batch_iter_cnt]) for batch_iter_cnt in range(len(X))]).to(device)
+        # print(lens)
         max_len = max([len(X[batch_iter_cnt]) for batch_iter_cnt in range(len(X))])
         X = [xiter + [voc_size for _ in range(max_len - len(xiter))] for xiter in X]
         X = torch.tensor(X).to(device)
@@ -42,13 +44,13 @@ def train_iter(data,model,criterion,optimizer,batch_size,voc_size):
         losses.append(loss.item())
     return np.average(losses)
 
-def train(max_epoch,batch_size = 5):
+def train(max_epoch,batch_size = 64):
     loss = [1,]
-    data = Data.Data(n_for_1 = 2)
+    data = Data.Data()
     voc_size = data.get_voc_size()
     model = Model.Encoder(batch_size = batch_size,voc_size = voc_size, hidden_size = 100, device = device ,n_layers = 1,dropout = 0).to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(),lr = 0.001)
+    optimizer = torch.optim.SGD(model.parameters(),lr = 0.0001)
     epoch_count = 0
     increase_count = 0
     while True:
@@ -57,8 +59,8 @@ def train(max_epoch,batch_size = 5):
         # sample
         loss.append(sample(dataset = data, model = model,batch_size = batch_size,criterion = criterion))
         print('epoch :',epoch_count,"\t",loss[-1],"\t",train_loss)
-        if epoch_count > 5000:
-            torch.save(model.state_dict(),"../ckpt/model" + str(epoch_count % 1000))
+        if epoch_count > 500:
+            torch.save(model.state_dict(),"../ckpt/model" + str(epoch_count % 100))
 
         # judge whether stop or not
         if loss[-2] < loss[-1]:
@@ -76,7 +78,7 @@ def train(max_epoch,batch_size = 5):
 
 def sample(dataset,model,batch_size,criterion):
     voc_size = dataset.get_voc_size()
-    [dataset_X,dataset_opt,dataset_gt],datset_size = dataset.get_test_data()
+    [dataset_X,dataset_gt,dataset_opt],datset_size = dataset.get_test_data()
     y_gt = [] #ground truth
     y_pd = [] #prediction
     for batch_iter_cnt in range(0,datset_size - batch_size,batch_size):
@@ -89,6 +91,7 @@ def sample(dataset,model,batch_size,criterion):
         # append opt to X
         X = dataset_X[batch_iter_cnt : batch_iter_cnt + batch_size]
         X = [X[index]+ [opt[index],] for index in range(batch_size)]
+        X.sort(key = lambda i:len(i),reverse=True)
 
         # padding X with `voc_size`
         lens = torch.tensor([len(X[batch_iter_cnt]) for batch_iter_cnt in range(len(X))]).to(device)
@@ -107,4 +110,4 @@ def sample(dataset,model,batch_size,criterion):
     return loss.item()
 
 if __name__ == "__main__":
-    train(max_epoch=10000,batch_size=50)
+    train(max_epoch=1000,batch_size=16)

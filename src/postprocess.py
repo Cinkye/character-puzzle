@@ -8,7 +8,7 @@ import data as Data
 def valid(model_path,n_for_1,device,batch_size):
 
 
-    dataset = Data.Data(n_for_1)
+    dataset = Data.Data()
     voc_size = dataset.get_voc_size()
     model = Model.Encoder(batch_size = batch_size,voc_size = voc_size, hidden_size = 100, device = device ,n_layers = 1,dropout = 0).to(device)
 
@@ -36,12 +36,14 @@ def valid(model_path,n_for_1,device,batch_size):
         for opt_index in range(n_for_1):
             # append `this opt` to X
             X_with_opt = [X[index]+ [opt[index][opt_index],] for index in range(batch_size)]
+            X_with_opt.sort(key = lambda i:len(i),reverse=True)
 
             # padding X with `voc_size`
             lens = torch.tensor([len(X_with_opt[batch_iter_cnt]) for batch_iter_cnt in range(len(X))]).to(device)
             max_len = max([len(X_with_opt[batch_iter_cnt]) for batch_iter_cnt in range(len(X))])
             X_with_opt = [xiter + [voc_size for _ in range(max_len - len(xiter))] for xiter in X_with_opt]
             X_with_opt = torch.tensor(X_with_opt).to(device)
+
             #print(X_with_opt)
             
             # feed into model
@@ -59,4 +61,4 @@ def valid(model_path,n_for_1,device,batch_size):
 
 
 if __name__ == "__main__":
-    valid(model_path = "../ckpt/model960", n_for_1 = 2, device = "cuda", batch_size = 50) 
+    valid(model_path = "../ckpt/model1", n_for_1 = 2, device = "cuda", batch_size = 256) 

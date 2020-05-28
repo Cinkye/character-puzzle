@@ -1,7 +1,8 @@
-import preprocess
+import read_data
+import random
 
 class Data:
-    def __init__(self,n_for_1):
+    def __init__(self):
         """
             for train and test data, dataset is in form like [[谜面，答案，地信],]
             for valid data, dataset is [[谜面，谜底，选项],]
@@ -9,8 +10,10 @@ class Data:
             variables begin with `raw` are prepared for calculating valid data.
         """
         # make train, valid, test
-        self.n_for_1 = n_for_1
-        raw_riddles = preprocess.read_n_for_1_dataset(n_for_1) #[[谜面，谜底，选项],]
+        self.n_for_1 = 2
+        raw_riddles = read_data.read_dataset() #[[谜面，谜底，选项],]
+        random.shuffle(raw_riddles)
+        print(raw_riddles[0:20])
         riddles = self.construct_classify_riddle_set(raw_riddles) #[[谜面，答案，地信],]
         one_tenth = len(riddles) // 10
         raw_one_tenth = len(raw_riddles) // 10
@@ -19,7 +22,7 @@ class Data:
         valid = raw_riddles[raw_one_tenth * 9 : raw_one_tenth * 10]
 
         # get voc
-        self.riddle_voc,self.ans_voc = preprocess.construct_train_data_corpus_vocabulary_dictionary(begin = 0, end = one_tenth * 8)
+        self.riddle_voc,self.ans_voc = read_data.construct_train_data_corpus_vocabulary_dictionary(begin = 0, end = one_tenth * 8)
         self.riddle_voc_size = len(self.riddle_voc) + 1 # two more place, one for padding, one for unseen
         self.ans_voc_size = len(self.ans_voc) + 1
         UNSEEN_riddle = self.riddle_voc_size + 1
@@ -34,8 +37,8 @@ class Data:
                 ret.append([self.ans_voc[word] if word in self.ans_voc else UNSEEN_ans for word in riddle[2] ])
             else:
                 ret.append( riddle[2] )
+            #print(ret)
             return ret
-
         self.train = [indexizer(row) for row in train]
         self.valid = [indexizer(row,is_valid= True) for row in valid]
         self.test = [indexizer(row) for row in test]
@@ -56,14 +59,15 @@ class Data:
         return ret
 
     def get_voc_dict(self):
-        return self.riddle_voc,self.ans_voc
+        return self.riddle_voc
     def get_voc_size(self):
-        return self.riddle_voc_size,self.ans_voc
+        return self.riddle_voc_size
 
     #
     #   @ret: [ riddle, answer, answer with options ], dataset size
     #
     def get_train_data(self):
+        random.shuffle(self.train)
         return [ [riddle[i] for riddle in self.train] for i in range(3) ],len(self.train)
 
     def get_valid_data(self):

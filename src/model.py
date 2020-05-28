@@ -46,10 +46,10 @@ class Encoder(nn.Module):
         # embed
         input_embedded = self.embedding(input).to(self.device)
 
-        # pad
-        input_packed = pack_padded_sequence(input_embedded, lens, batch_first=True,enforce_sorted=False).to(self.device)
+        # pad 一句话的向量表示
+        input_packed = pack_padded_sequence(input_embedded, lens, batch_first=True).to(self.device)
 
-        # feed into gru
+        # feed into gru 一个RNN output:高维特征
         gru_output_packed, hidden = self.gru(input_packed)
 
         # concat gru_output with opt
